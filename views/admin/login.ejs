@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('./head.ejs') %>
+    <title>Đăng nhập hệ thống quản lý</title>
+</head>
+<body class="bg-light bg-gradient">
+    <header class="header">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Xem Website</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Liên hệ</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <div class="main py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-4 offset-xl-4 p-0">
+                    <p class="h3 text-center">ĐĂNG NHẬP HỆ THỐNG</p>
+                </div>
+                <form action="" method="POST" id="form-login"> 
+                    <div class="col-xl-4 offset-xl-4">
+                        <label for="input-email" class="form-label">Email</label>
+                        <input name="email" required type="text" class="form-control" id="input-email" placeholder="Tài khoản">
+                    </div>
+                    <div class="col-xl-4 offset-xl-4 mt-3">
+                        <label for="input-password" class="form-label">Mật khẩu</label>
+                        <input name="password" required type="password" class="form-control" id="input-password" autocomplete="on" placeholder="Mật khẩu">
+                    </div>
+                    <button type="submit" name="submit-login" class="btn btn-danger offset-xl-4 mt-3">Đăng nhập</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
