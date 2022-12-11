@@ -24,14 +24,16 @@ const symbolRouter = require('./routes/symbol.router')
 const provinceRouter = require('./routes/province.router')
 const pointRouter = require('./routes/point.router')
 const locationRouter = require('./routes/location.router')
+const tourRouter = require('./routes/tour.router')
 
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/symbol", symbolRouter)
 app.use("/api/v1/province", provinceRouter)
 app.use("/api/v1/point", pointRouter)
 app.use("/api/v1/location", locationRouter)
+app.use("/api/v1/tour", tourRouter)
 
-const PORT = 5000
+const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
     console.log("Server OK - > 5000")

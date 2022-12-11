@@ -1,17 +1,26 @@
 const pool = require("../database/index")
 
 const locationService = {
-    getAll: async () => {
-        const sql = `   select location.*, point.*, province.name as provinceName from location, point, province
+    getAll: async ({limit, offset = 0}) => {
+        let sql = `   select location.*, point.*, province.name as provinceName from location, point, province
                         where location.idPoint = point.idPoint and location.idProvince = province.idProvince`
-        return await pool.query(sql)
+        const params = []
+        if (limit) {
+            sql += ` limit ? offset ?`
+            params.push(limit, offset)
+        }
+        return await pool.query(sql, params)
      
     },
     getAllRenderMap: async () => {
-        const sql = `   SELECT location.name, point.*, symbol.url from location, point, symbol
+        const sql = `   SELECT location.name, location.idLocation, location.address, point.*, symbol.url from location, point, symbol
                         where location.idPoint = point.idPoint and location.idSymbol = symbol.idSymbol;`
         return await pool.query(sql)
      
+    },
+    getCount: async () => {
+        const sql = `select count(*) as count from location`
+        return await pool.query(sql)
     },
     getById: async (id) => {
         return await pool.query("select * from location where idlocation = ?", [id])

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { Row, Col, Card, Table, Modal, Button } from "react-bootstrap";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import Pagination from "../../components/Pagination";
 
 import locationApi from "../../api/locationApi"
 import provinceApi from "../../api/provinceApi"
@@ -10,6 +11,9 @@ import symbolApi from "../../api/symbolApi"
 import pointApi from "../../api/pointApi"
 
 export default function LocationList() {
+
+  const [page, setPage] = useState(1)
+  const [totalPage, setTotalPage] = useState(0)
 
   const [locationData, setLocationData] = useState({});
   const [provinceData, setProvinceData] = useState({});
@@ -30,17 +34,17 @@ export default function LocationList() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const res = await locationApi.getAll({});
+        const { data, totalPage } = await locationApi.getAll({limit: 5, page});
         setLoading(false)
-        console.log(res)
-        setLocationData(res.data);
+        setLocationData(data);
+        setTotalPage(totalPage)
       } catch (error) {
         setLoading(false)
         console.log(error);
       }
     };
     fetchData();
-  }, [rerender]);
+  }, [rerender, page]);
 
   useEffect(() => {
     const fetchProvince = async () => {
@@ -285,6 +289,19 @@ export default function LocationList() {
                   : null}
               </tbody>
             </Table>
+            <div className="pagination">
+            <Row>
+              <Col xl={12}>
+                {totalPage && totalPage > 1 ? (
+                  <Pagination
+                    totalPage={totalPage}
+                    currentPage={page}
+                    onChangePage={(nPage) => setPage(nPage)}
+                  />
+                ) : null}
+              </Col>
+            </Row>
+          </div>
           </Card.Body>
         </Card>
       </Col>

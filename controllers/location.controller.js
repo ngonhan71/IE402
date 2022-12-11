@@ -5,10 +5,26 @@ const pool = require("../database/index")
 const locationController = {
     getAll: async (req, res) => {
         try {
-            const [rows] = await locationService.getAll()
-            res.json({
-                data: rows,
+            const page = +req.query.page || 1
+            const limit = +req.query.limit
+            const offset = (page - 1) * limit
+
+            const [a, b] = await Promise.all([
+                locationService.getCount(),
+                locationService.getAll({limit, offset})
+            ])
+
+            const [countResult] = a
+            const count = countResult[0]
+            const [result] = b
+            const totalPage = Math.ceil(count.count / limit)
+
+           res.json({
+                data: result,
                 message: "Ok",
+                count: count.count,
+                totalPage,
+                page
             })
         } catch (error) {
             console.log(error)

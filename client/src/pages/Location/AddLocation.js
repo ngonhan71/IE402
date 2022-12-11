@@ -60,12 +60,13 @@ export default function AddLocation() {
         name, address, time, price, url, description, idProvince, idSymbol, longitude, latitude
     })
     try {
-        const res = await locationApi.create({
+        const { error } = await locationApi.create({
           name, address, time, price, url, description, idProvince, idSymbol, longitude, latitude
         })
-        console.log(res)
-        alert("Thêm thành công!")
-        navigate({ pathname: "/location" });
+        if (!error) {
+          alert("Thêm thành công!")
+          navigate({ pathname: "/location" });
+        }
     } catch (error) {
         console.log(error)
     }

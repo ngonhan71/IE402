@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient"
 
 const locationApi = {
-    getAll: ({page = 1, limit = 10,}) => {
+    getAll: ({page = 1, limit}) => {
         const url = 'location/'
         return axiosClient.get(url, { params: {page, limit}})
     },
