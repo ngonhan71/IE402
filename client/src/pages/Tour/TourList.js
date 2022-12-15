@@ -1,18 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom"
 import { Row, Col, Card, Table, Modal, Button } from "react-bootstrap";
+import Select from "react-select";
+
 import tourApi from "../../api/tourApi";
 
 import format from "../../helper/format"
+import locationApi from "../../api/locationApi";
 
 export default function TourList() {
 
-  const [tourData, setTourData] = useState({});
-  const [ctTour, setCtTour] = useState([]);
+  const [locationData, setLocationData] = useState({})
+  const [tourData, setTourData] = useState({})
+  const [ctTour, setCtTour] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const [updateTour, setUpdateTour] = useState({})
 
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+
+  const [rerender, setRerender] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,14 +28,13 @@ export default function TourList() {
         setLoading(true)
         const { data } = await tourApi.getAll({});
         setLoading(false)
-        console.log(data)
         setTourData(data);
       } catch (error) {
         console.log(error)
       }
     }
     fetchData()
-  }, [])
+  }, [rerender])
 
   const getDetail = async (idTour) => {
     try {
@@ -36,7 +43,6 @@ export default function TourList() {
         return
       }
       const { data } = await tourApi.getById(idTour)
-      console.log(data)
       setCtTour(data)
       setShowModal(true)
     } catch (error) {
@@ -44,8 +50,114 @@ export default function TourList() {
     }
   }
 
+  const handleClickUpdate = async (tour) => {
+    try {
+      const { name, idTour, idArc } = tour
+      console.log(tour)
+      const { data } = await tourApi.getById(idTour)
+      const locationList = data.map(item => {
+        return {
+          value: item.idLocation,
+          label: item.name,
+          idPoint: item.idPoint,
+          number: item.number,
+          time: item.time,
+          price: item.price,
+          idProvince: item.idProvince
+        }
+      })
+      setUpdateTour({idTour, idArc, name, locationList: locationList.sort((a, b) => a.number > b.number ? 1 : -1)})
+      setShowUpdateModal(true)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const { data } = await locationApi.getAll({});
+        console.log(data)
+        const opts = data.map((item) => {
+          return {
+            value: item.idLocation,
+            label: item.name,
+            idPoint: item.idPoint,
+            time: item.time,
+            price: item.price,
+            idProvince: item.idProvince
+          };
+        });
+        setLocationData(opts);
+        // setIdProvince(res.data[0]?.idProvince);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchLocation();
+  }, []);
+
+  const handleUpdate = async () => {
+    const { idTour, idArc, name, locationList } = updateTour
+    const provinceList = locationList.map(item => item.idProvince)
+    const set = new Set(provinceList)
+    try {
+      const { error } = await tourApi.update(idTour, {name, idArc, locationList, provinceList: Array.from(set) })
+      if (error) {
+        alert(error)
+        return
+      }
+      alert("Thành công!")
+      setRerender(!rerender)
+      setShowUpdateModal(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
     <Row>
+      <Modal size="lg" show={showUpdateModal} onHide={() => setShowUpdateModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Chi tiết tour</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div>
+            <Row>
+                <h5>Thông tin tour</h5>
+                <Col xl={12}>
+                  <label>Tên Tour</label>
+                  <input required type="text" className="form-control" value={updateTour?.name}
+                  onChange={(e) => setUpdateTour(prev => { return {...prev, name: e.target.value}})} 
+                  />
+                </Col>
+                {/* <Col xl={6}>
+                  <label>Danh sách các tỉnh/thành đi qua</label>
+                  <Select
+                    isMulti={true}
+                    onChange={(province) => setSelectedProvince(province)}
+                    options={provinceData}
+                  />
+                </Col> */}
+                <Col xl={12}>
+                  <label>Danh sách các Địa điểm đi qua</label>
+                  <Select
+                    isMulti={true}
+                    value={updateTour?.locationList}
+                    onChange={(location) => setUpdateTour(prev => { return {...prev, locationList: location}})}
+                    options={locationData}
+                  />
+                </Col>
+            </Row>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowUpdateModal(false)}>
+            Hủy
+          </Button>
+          <Button variant="success" onClick={handleUpdate}>Cập nhật</Button>
+        </Modal.Footer>
+      </Modal>
       <Modal size="lg" show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Chi tiết tour</Modal.Title>
@@ -137,6 +249,9 @@ export default function TourList() {
                           <td style={{textAlign: "right"}}>{format.formatPrice(item.totalPrice)}</td>
                           <td>
                             <Button variant="primary" onClick={() => getDetail(item?.idTour)}>Chi tiết</Button>
+                          </td>
+                          <td>
+                            <Button variant="warning" onClick={() => handleClickUpdate(item)}>Sửa</Button>
                           </td>
                         </tr>
                       );

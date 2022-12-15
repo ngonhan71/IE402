@@ -25,6 +25,7 @@ const tourController = {
             for (let i = 0; i < rows.length; i++) {
                 const [detail] = await tourService.getRenderMapById(rows[i].idTour)
                 data.push({
+                    idTour: rows[i].idTour,
                     name: rows[i].name,
                     totalPrice: rows[i].totalPrice,
                     time: rows[i].time,
@@ -85,6 +86,86 @@ const tourController = {
                 }
 
                 const [rows] = await tourService.create({name, totalTime: time, totalPrice: price, idArc, color})
+                await conn.commit();
+                if (rows?.affectedRows) {
+                    res.json({
+                        data: rows,
+                        message: "Ok",
+                    })
+                } else {
+                    res.json({
+                        status: "error",
+                        error: error
+                    })
+                }
+            }
+            
+        } catch (error) {
+            conn.rollback()
+            console.log(error)
+            res.json({
+                status: "error",
+                error: error.message
+            })
+        } finally {
+            if (conn) await conn.release();
+        }
+    },
+    update: async (req, res) => {
+        let conn = null;
+        try {
+            const { idTour } = req.params
+            const {name, provinceList, locationList, idArc } = req.body
+            conn = await pool.getConnection()
+            await conn.beginTransaction()
+
+            await arcService.update(idArc, {description: `Cung ${name}`})
+
+            if (idArc > 0) {
+                const [dsProvinceBefore] = await arcService.getProvinceByIdArc(idArc)
+                const [dsLocationBefore] = await arcService.getPointByIdArc(idArc)
+              
+                for (let i = 0; i < dsProvinceBefore.length; i++) {
+                    const found = provinceList.find(tl => tl === dsProvinceBefore[i]['idProvince'])
+                    if (!found) {
+                        await arcService.removeProvince(idArc, dsProvinceBefore[i]['idProvince'])
+                    }
+                }
+
+                for (let i = 0; i < provinceList.length; i++) {
+                    const found = dsProvinceBefore.find(tl => tl['idProvince'] === provinceList[i])
+                    if (!found) {
+                        await arcService.insertProvinceArc({idProvince: provinceList[i], idArc})
+                    }
+                }
+
+                for (let i = 0; i < dsLocationBefore.length; i++) {
+                    const found = locationList.find(tl => tl.idPoint === dsLocationBefore[i]['idPoint'])
+                    if (!found) {
+                        await arcService.removePoint(idArc, dsLocationBefore[i]['idPoint'])
+                    } 
+                }
+                let price = 0
+                let time = 0
+                for (let i = 0; i < locationList.length; i++) {
+                    price += locationList[i].price
+                    time += locationList[i].time
+                    const number = i + 1
+                    const found = dsLocationBefore.find(tl => tl['idPoint'] === locationList[i]['idPoint'])
+                    if (!found) {
+                        await arcService.insertPointArc({idPoint: locationList[i]['idPoint'], idArc, number})
+                    }
+                }
+
+                const [after] = await arcService.getPointByIdArc(idArc)
+                for (let i = 0; i < locationList.length; i++) {
+                    const found = after.find(tl => tl['idPoint'] === locationList[i]['idPoint'])
+                    if (found) {
+                        await arcService.updateNumber({idPoint: locationList[i]['idPoint'], idArc, number: i + 1})
+                    }
+                }
+
+                const [rows] = await tourService.update(idTour, {name, totalTime: time, totalPrice: price})
                 await conn.commit();
                 if (rows?.affectedRows) {
                     res.json({

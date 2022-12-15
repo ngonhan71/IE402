@@ -31,6 +31,10 @@ const tourService = {
         const sql = "insert into tour (name, time, totalPrice, description, color, idArc) values (?, ?, ?, ?, ?, ?)"
         return await pool.query(sql, [name, totalTime, totalPrice, description, color, idArc])
     },
+    update: async (idTour, {name, totalTime, totalPrice}) => {
+        const sql = "update tour set name = ?, time = ?, totalPrice = ? where idTour = ?"
+        return await pool.query(sql, [name, totalTime, totalPrice, idTour])
+    },
     // update: async (id, {longitude, latitude}) => {
     //     const sql = "update point set longitude = ?, latitude = ? where idPoint = ?"
     //     return await pool.query(sql, [longitude, latitude, id])

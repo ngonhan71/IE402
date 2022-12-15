@@ -8,7 +8,7 @@ router.get("/", tourController.getAll)
 
 router.get("/:id", tourController.getById)
 router.post("/", tourController.create)
-// router.put("/:id", pointController.update)
+router.put("/:idTour", tourController.update)
 // router.delete("/:id", pointController.delete)
 
 module.exports = router

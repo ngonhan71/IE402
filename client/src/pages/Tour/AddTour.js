@@ -76,9 +76,12 @@ export default function AddTour() {
       console.log(error)
     }
   };
-  // Form <select multiple>POINT</select>
-  // Click => insert Arc -> idArc, List<Point> insert Table Arc_POINT ->
-  //Select array Location -> List<Point>, insert Arc -> idArc -> insertTour
+  
+  useEffect(() => {
+    const newName = selectedLocation.map(item => item.label).join(" - ")
+    setName(newName)
+  }, [selectedLocation])
+
   return (
     <Row>
       <Col xl={12}>

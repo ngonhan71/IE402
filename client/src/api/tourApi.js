@@ -17,6 +17,10 @@ const tourApi = {
         const url = `tour/`
         return axiosClient.post(url, data)
     },
+    update: (idTour, data) => {
+        const url = `tour/${idTour}`
+        return axiosClient.put(url, data)
+    },
 }
 
 export default tourApi

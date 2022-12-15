@@ -1,24 +1,42 @@
 import { useEffect, useRef, useState } from "react";
 import { loadModules, setDefaultOptions } from 'esri-loader';
-import BenTre from "../../data/BenTre.json"
+
 import NavBar from "../../components/NavBar"
 import locationApi from "../../api/locationApi"
 import tourApi from "../../api/tourApi"
 import format from "../../helper/format";
 import symbolApi from "../../api/symbolApi";
-import { Button } from "react-bootstrap";
+import { Table } from "react-bootstrap";
+
+
+import BenTre from "../../data/BenTre.json"
+import TienGiang from "../../data/TienGiang.json"
+import LongAn from "../../data/LongAn.json"
+import BacLieu from "../../data/BacLieu.json"
+import AnGiang from "../../data/AnGiang.json"
+import CanTho from "../../data/CanTho.json"
+import CaMau from "../../data/CaMau.json"
+import DongThap from "../../data/DongThap.json"
+import HauGiang from "../../data/HauGiang.json"
+import SocTrang from "../../data/SocTrang.json"
+import TraVinh from "../../data/TraVinh.json"
+import VinhLong from "../../data/VinhLong.json"
+import KienGiang from "../../data/KienGiang.json"
+import KienGiang_islands from "../../data/KienGiang_islands.json"
 
 setDefaultOptions({ css: true });
 
 
 export default function MyMap() {
     const [locationData, setLocationData] = useState({});
+    const [locationSelect, setLocationSelect] = useState([])
     const [tourList, setTourList] = useState([]);
     const [symbolList, setSymbolList] = useState([]);
-    const [selectedLocation, setSelectedLocation] = useState("");
+    const [selectedLocation, setSelectedLocation] = useState(0);
 
-    const [isFiltering, setIsFiltering] = useState(false)
     const [filterResult, setFilterResult] = useState([])
+
+    const [selectedTour, setSelectedTour] = useState({})
 
     const viewDiv = useRef()
 
@@ -26,8 +44,12 @@ export default function MyMap() {
         const fetchLocation = async () => {
           try {
             const { data } = await locationApi.getAllToRenderMap({});
+            const select =  data.map(item => {
+              return { idLocation: item.idLocation, name: item.name }
+            })
+            const none = { idLocation: 0, name: "Chọn địa điểm" }
+            setLocationSelect([none, ...select])
             setLocationData(data)
-            setSelectedLocation(data[0].idLocation)
           } catch (error) {
             console.log(error);
           }
@@ -36,7 +58,7 @@ export default function MyMap() {
           try {
             const { data } = await tourApi.getAllToRenderMap({});
             setTourList(data)
-            setFilterResult(data)
+            // setFilterResult(data)
           } catch (error) {
             console.log(error);
           }
@@ -44,7 +66,6 @@ export default function MyMap() {
         const fetchSymbol = async () => {
           try {
             const { data } = await symbolApi.getAll({});
-            console.log(data)
             setSymbolList(data)
           } catch (error) {
             console.log(error);
@@ -53,7 +74,7 @@ export default function MyMap() {
         fetchSymbol()
         fetchTour()
         fetchLocation()
-      }, []);
+    }, []);
 
     useEffect(() => {
         let view
@@ -92,7 +113,20 @@ export default function MyMap() {
                 });
             };
 
-            const point = ({longitude, latitude, url, name, address}) => {
+            const islands = (data, island) => {
+              return new Graphic({
+                geometry: { type: "polygon", rings: island },
+                symbol: { type: "simple-fill", color: data.color },
+                attributes: data,
+                popupTemplate: {
+                  title: "{title}",
+                  content:
+                    "<a>Dân số: {population} người <br> Diện tích: {area}</a> km²",
+                },
+              });
+            };
+
+            const point = ({longitude, latitude, url, name, address, image}) => {
                 return new Graphic({
                   symbol: {
                     type: "picture-marker",
@@ -101,10 +135,10 @@ export default function MyMap() {
                     height: '48px'
                   },
                   geometry: { type: 'point', longitude, latitude },
-                  attributes: { longitude, latitude, name, address },
+                  attributes: { longitude, latitude, name, address, image },
                   popupTemplate: {
                     title: "Địa điểm: {name}",
-                    content: "Địa chỉ: {address}"
+                      content: "Địa chỉ: {address} <br><img src={image}> </img> "
                   }
                 });
               }; 
@@ -117,31 +151,51 @@ export default function MyMap() {
                   popupTemplate: {
                     title: "Tour {name}",
                     content: `
-                      <div style="font-weight: bold; font-size: 18px">
-                        Tổng ngày {time}, Tổng chi phí {totalPrice}
-                      </div>
-                      <div>
                       {content}
-                      </div>
-                    `
+                    `,
                   }
               });
             };
+            
+            for (let i = 0; i < KienGiang_islands.length; i++) {
+              graphicsLayer.add(islands(KienGiang, KienGiang_islands[i]));
+            }
+            graphicsLayer.add(province(BenTre));
+            graphicsLayer.add(province(TienGiang));
+            graphicsLayer.add(province(LongAn));
+            graphicsLayer.add(province(AnGiang));
+            graphicsLayer.add(province(BacLieu));
+            graphicsLayer.add(province(CanTho));
+            graphicsLayer.add(province(CaMau));
+            graphicsLayer.add(province(DongThap));
+            graphicsLayer.add(province(SocTrang));
+            graphicsLayer.add(province(TraVinh));
+            graphicsLayer.add(province(VinhLong));
+            graphicsLayer.add(province(HauGiang));
+            graphicsLayer.add(province(KienGiang));
+
             if (locationData && locationData.length > 0) {
               locationData.forEach(item => graphicsLayer.add(point(item)))      
             }
-            if (filterResult && filterResult.length > 0) {
-              filterResult.forEach(item => {
-                const pathsConvert = []
-                let content = ``
-                item.paths.forEach(item => {
-                  content += `<div>${item.name} - ${item.time} ngày - Chi phí ${format.formatPrice(item.price)}</div>`
-                  pathsConvert.push([item.longitude, item.latitude])
-                })
-                graphicsLayer.add(drawTour({...item, totalPrice: format.formatPrice(item.totalPrice), paths: pathsConvert, content: content}))
-              })      
+            if (selectedTour && selectedTour.idTour) {
+              const pathsConvert = []
+              let content = `<table class="table table-striped table-bordered table-hover">
+                                <tr>
+                                  <th>Địa điểm</th>
+                                  <th>Thời gian(ngày)</th>
+                                  <th>Chi phí</th>
+                                </tr>`
+              selectedTour.paths.forEach(item => {
+                content += `  <tr>
+                                <td>${item.name}</td>
+                                <td class="time">${item.time}</td>
+                                <td class="price">${format.formatPrice(item.price)}</td>
+                              </tr>`
+                pathsConvert.push([item.longitude, item.latitude])
+              })
+              content += `</table>`
+              graphicsLayer.add(drawTour({...selectedTour, totalPrice: format.formatPrice(selectedTour.totalPrice), paths: pathsConvert, content: content}))
             }
-            graphicsLayer.add(province(BenTre));
 
         }).catch((err) => console.error(err));
         return () => {
@@ -150,11 +204,15 @@ export default function MyMap() {
                 view = null
             }
         }
-    }, [locationData, tourList, filterResult]);
+    }, [locationData, selectedTour]);
   
-    const handleFilter = () => {
-      setIsFiltering(true)
+    useEffect(() => {
       const result = []
+      if (selectedLocation === 0) {
+        setSelectedTour({})
+        setFilterResult([])
+        return
+      }
       tourList.forEach(tour => {
         const { paths } = tour
         const index = paths.findIndex(location => location.idLocation === selectedLocation)
@@ -163,17 +221,22 @@ export default function MyMap() {
         }
       })
       if (result.length === 0) {
-        alert("Không tìm thấy tour phù hợp")
+        setFilterResult([])
         return
       }
       setFilterResult(result)
-    }
+    }, [selectedLocation, tourList])
 
     return (
        <div style={{position: "relative"}}>
         <header>
             <NavBar />
         </header>
+        {selectedTour && selectedTour.name && filterResult && filterResult.length > 0 && (
+          <div className="title-selected-tour">
+            <p>{selectedTour?.name}</p>
+          </div>
+        )}
         <div className="symbol-list">
           {symbolList && symbolList.length > 0 && symbolList.map(symbol => {
             return (
@@ -190,21 +253,52 @@ export default function MyMap() {
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(+e.target.value)}
           >
-            {locationData.length > 0 &&
-              locationData.map(item => (
+            {locationSelect && locationSelect.length > 0 &&
+              locationSelect.map(item => (
                 <option key={item.idLocation} value={item.idLocation}>
                   {item.name}
                 </option>
               ))}
           </select>
-          <div className="d-flex justify-content-between">
-            <Button variant="danger" className="mt-4" onClick={handleFilter}>Tìm kiếm</Button>
+          {selectedLocation !== 0 && (
+          <div className="container-result">
+            <p className="title">Kết quả:</p>
+            {filterResult && filterResult.length > 0 ? (
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                      <th>#</th>
+                      <th>Tour</th>
+                      <th>Thời gian (ngày)</th>
+                      <th>Chi phí</th>
+                  </tr>
+                </thead>
+                <tbody style={{textAlign: "center"}}>
+                {filterResult.map((item, index) => {
+                  return (
+                      <tr key={item.idTour} onClick={() => setSelectedTour(item)}>
+                        <td>{index + 1}</td>
+                        <td>{item.name}</td>
+                        <td>{item.time}</td>
+                        <td style={{textAlign: "right"}}>{format.formatPrice(item.totalPrice)}</td>
+                      </tr>
+                    )
+                  })
+                }
+                </tbody>
+              </Table>
+            ): <p>Không tìm thấy tour phù hợp!!</p>}
+        </div>
+        )}
+          {/* <div className="d-flex justify-content-between">
+            <Button variant="danger" className="mt-4" onClick={handleFilter} disabled={selectedLocation === 0}>Tìm kiếm</Button>
             {isFiltering && <Button variant="secondary" className="mt-4" onClick={() => {
               setIsFiltering(false)
               setFilterResult(tourList)
             }}>Hủy</Button>}
-          </div>
+          </div> */}
         </div>
+        
          <div ref={viewDiv} style={{height: "100vh", width: "100vw"}}></div>
        </div>
     )
