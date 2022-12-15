@@ -140,7 +140,7 @@ export default function TourList() {
                   />
                 </Col> */}
                 <Col xl={12}>
-                  <label>Danh sách các Địa điểm đi qua</label>
+                  <label>Danh sách các Địa điểm đi qua theo thứ tự</label>
                   <Select
                     isMulti={true}
                     value={updateTour?.locationList}

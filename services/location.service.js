@@ -13,7 +13,8 @@ const locationService = {
      
     },
     getAllRenderMap: async () => {
-        const sql = `   SELECT location.name, location.idLocation, location.address, location.url as image, point.*, symbol.url from location, point, symbol
+        const sql = `   SELECT location.name, location.idLocation, location.address, location.description, location.url as image, point.*, symbol.url 
+			from location, point, symbol
                         where location.idPoint = point.idPoint and location.idSymbol = symbol.idSymbol;`
         return await pool.query(sql)
      

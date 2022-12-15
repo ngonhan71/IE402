@@ -126,7 +126,7 @@ export default function MyMap() {
               });
             };
 
-            const point = ({longitude, latitude, url, name, address, image}) => {
+            const point = ({longitude, latitude, url, name, address, image, description}) => {
                 return new Graphic({
                   symbol: {
                     type: "picture-marker",
@@ -135,10 +135,10 @@ export default function MyMap() {
                     height: '48px'
                   },
                   geometry: { type: 'point', longitude, latitude },
-                  attributes: { longitude, latitude, name, address, image },
+                  attributes: { longitude, latitude, name, address, image, description },
                   popupTemplate: {
                     title: "Địa điểm: {name}",
-                      content: "Địa chỉ: {address} <br><img src={image}> </img> "
+                      content: "Địa chỉ: {address} <br><img src={image}> </img> <b>Thông tin tổng quát:</b> <br> <p>{description}</p>"
                   }
                 });
               }; 
@@ -153,7 +153,7 @@ export default function MyMap() {
                     content: `
                       {content}
                     `,
-                  }
+                  },
               });
             };
             
@@ -193,6 +193,11 @@ export default function MyMap() {
                               </tr>`
                 pathsConvert.push([item.longitude, item.latitude])
               })
+              content += `  <tr>
+                              <th>Tổng cộng</th>
+                              <th class="time">${selectedTour.time}</th>
+                              <th class="price">${format.formatPrice(selectedTour.totalPrice)}</th>
+                            </tr>`
               content += `</table>`
               graphicsLayer.add(drawTour({...selectedTour, totalPrice: format.formatPrice(selectedTour.totalPrice), paths: pathsConvert, content: content}))
             }
