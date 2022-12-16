@@ -16,7 +16,7 @@ export default function DefaultLayout({isAllowed}) {
         if (accessToken) {
           localStorage.removeItem('accessToken')
         }
-        window.location.href = "/login"
+        // window.location.href = "/login"
       }
 
     return (
@@ -27,7 +27,7 @@ export default function DefaultLayout({isAllowed}) {
                         <li>
                             <Link to="/">Bản đồ</Link>
                         </li>
-                        <li onClick={handleLogout} style={{marginLeft: "auto"}}>
+                        <li onClick={handleLogout} style={{marginLeft: "auto", cursor: "pointer"}}>
                             <p>Đăng xuất</p>
                         </li>
                     </ul>

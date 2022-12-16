@@ -1,10 +1,10 @@
 // import { FaArrowDown, FaArrowUp } from 'react-icons/fa';
 
 export const routes = [
-  {
-    title: 'Tổng quan',
-    path: '/',
-  },
+  // {
+  //   title: 'Tổng quan',
+  //   path: '/',
+  // },
   {
     title: 'Ký hiệu',
     path: '/symbol',
